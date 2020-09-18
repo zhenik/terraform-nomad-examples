@@ -54,3 +54,7 @@ clean: destroy-box remove-tmp
 # helper commands
 update-box:
 	@SSL_CERT_FILE=${SSL_CERT_FILE} CURL_CA_BUNDLE=${CURL_CA_BUNDLE} vagrant box update || (echo '\n\nIf you get an SSL error you might be behind a transparent proxy. \nMore info https://github.com/fredrikhgrelland/vagrant-hashistack/blob/master/README.md#proxy\n\n' && exit 2)
+
+# debug
+d:
+	vagrant ssh -c 'consul services deregister -namespace team1 -id=web || true && consul services deregister -namespace team2 -id=web || true && consul services deregister -namespace default -id=web || true' default

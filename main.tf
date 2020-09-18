@@ -9,8 +9,6 @@ data "template_file" "nomad-job-template-countdash" {
   vars = {
     datacenters  = local.datacenters
     namespace    = var.nomad_namespace
-    image        = var.container_image
-    service_name = var.service_name
   }
 }
 
