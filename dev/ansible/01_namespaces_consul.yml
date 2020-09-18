@@ -1,4 +1,3 @@
-
 # User-story -> namespaces in Consul
 # Aim: show resource isolation of services
 # Reference: https://youtu.be/Ff6kLvKkJBE
@@ -51,20 +50,20 @@
   retries: 5
   delay: 1
 
-- name: Try to access policy another policy
+- name: Try to access another policy
   shell: consul acl policy read -namespace=team2 -name=namespace-management
   register: read_policy_try_2
   environment:
     CONSUL_HTTP_TOKEN: "{{ team1_namespace_admin_token.stdout }}"
-  until: read_policy_try_2.rc != 0
+  until: read_policy_try_2.rc == 1
   retries: 5
   delay: 1
 
 ### !!! Does not work
 - name: Try register service 'web' in namespace=default with admin token team1 - should fail
   shell: consul services register -namespace=default -name=web -address=1.1.1.1 -port=80
-  register:
-  environment: register_service_try_1
+  register: register_service_try_1
+  environment:
     CONSUL_HTTP_TOKEN: "{{ team1_namespace_admin_token.stdout }}"
   until: register_service_try_1.rc != 0
   retries: 5
@@ -72,8 +71,8 @@
 
 - name: Try register service 'web' in namespace=team2 with admin token team1 - should fail
   shell: consul services register -namespace=team2 -name=web -address=1.1.1.1 -port=80
-  register:
-  environment: register_service_try_2
+  register: register_service_try_2
+  environment:
     CONSUL_HTTP_TOKEN: "{{ team1_namespace_admin_token.stdout }}"
   until: register_service_try_2.rc != 0
   retries: 5
