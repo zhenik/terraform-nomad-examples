@@ -1,5 +1,8 @@
+
 # User-story -> namespaces in Consul
 # Aim: show resource isolation of services
+# Reference: https://youtu.be/Ff6kLvKkJBE
+
 # 1. Register service in namespace=default
 # 2. Create namespaces ["team1", "team2"]
 # 3. Generate admin tokens for namespaces ["team1", "team2"]
