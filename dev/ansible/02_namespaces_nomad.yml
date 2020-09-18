@@ -1,0 +1,90 @@
+## User-story -> Nomad
+## Aim: show resource isolation of services
+## 1. Deploy module with namespace=default and verify healthchecks
+## 2. Create two more namespaces ["team1", "team2"] and tokens for team-administrators ("namespace-management" policy)
+## 3. Deploy module using "team1" team-administrator token. Verify.
+## 4. Create leaf-token: "team1" -> "api-team"
+## 5. Deploy module using "team1.api-team" token. Verify
+## 6. Deploy module using "team2" team-administrator token. Verify (try list of services in namespace "team1").
+#
+#
+## 1. Deploy module with namespace=default and verify healthchecks
+#- name: Deploy module to namespace 'default'
+#  terraform:
+#    project_path: ../../example/namespaces
+#    force_init: true
+#    state: present
+#  register: deploy_namespace_default
+#
+#- name: Terraform stdout
+#  debug:
+#    msg: "{{ deploy_namespace_default.stdout }}"
+#
+#- name: count-api healthchecks pass
+#  uri:
+#    url: http://localhost:8500/v1/health/checks/count-api?filter={{ '(Status=="passing")' | urlencode }}
+#    method: GET
+#    return_content: yes
+#    status_code: 200
+#    body_format: json
+#  register: result_count_api
+#  retries: 15
+#  delay: 15
+#  until: result_count_api.json | length == 1
+#- name: count-dashboard healthchecks pass
+#  uri:
+#    url: http://localhost:8500/v1/health/checks/count-dashboard?filter={{ '(Status=="passing")' | urlencode }}
+#    method: GET
+#    return_content: yes
+#    status_code: 200
+#    body_format: json
+#  register: result_count_dashboard
+#  retries: 15
+#  delay: 15
+#  until: result_count_dashboard.json | length == 1
+#
+## 2. Create two more namespaces ["team1", "team2"] and tokens for team-administrators ("namespace-management" policy)
+#- name: Create namespace 'team1'
+#  shell: consul namespace create -name team1 -description "Team1 namespace" -meta "team-id=team1" -format=json
+#
+#- name: Create namespace 'team2'
+#  shell: consul namespace create -name team2 -description "Team2 namespace" -meta "team-id=team2" -format=json
+#
+#- name: List namespaces
+#  shell: consul namespace list
+#  register: consul_namespaces
+#
+#- name: Consul - print namespaces
+#  debug:
+#    msg: "{{ consul_namespaces.stdout }}"
+#
+#- name: Create administrator token for team1
+#  shell: >
+#    consul acl token create \
+#    -format=json \
+#    -namespace team1 \
+#    -description "Team1 administrator" \
+#    -policy-name "namespace-management" \
+#    | jq -r .SecretID
+#  register: team1_namespace_admin_token
+#
+#- name: Create administrator token for team2
+#  shell: >
+#    consul acl token create \
+#    -format=json \
+#    -namespace team2 \
+#    -description "Team2 administrator" \
+#    -policy-name "namespace-management" \
+#    | jq -r .SecretID
+#  register: team2_namespace_admin_token
+#
+## 3. Deploy module using "team1" team-administrator token. Verify.
+#
+#- name: Deploy module to namespace 'team1'
+#  terraform:
+#    project_path: ../../example/namespaces
+#    variables:
+#      nomad_namespace: "team1"
+#  register: deploy_namespace_team1
+#  environment:
+#    CONSUL_HTTP_TOKEN: "{{ team1_namespace_admin_token.stdout }}"
